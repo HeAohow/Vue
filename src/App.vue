@@ -8,39 +8,24 @@
           placeholder="你接下来要做什么?"
           v-model="newTodo"
           v-autofocus
-          @keyup.enter="addTodo">
+          @keyup.enter="addTodo()">
       </header>
       <section class="main" v-show="todos.length">
-        <ul class="todo-list">
-          <li
-            v-for="todo in todos"
-            class="todo"
-            :key="todo.id"
-            :class="{ completed: todo.completed, editing: todo.id == editedTodo.id }">
-            <div class="view">
-              <input class="toggle" type="checkbox" v-model="todo.completed">
-              <label @dblclick="editTodo(todo)">{{ todo.title }}</label>
-              <button class="destroy" @click="removeTodo(todo)"></button>
-            </div>
-            <input
-              class="edit"
-              type="text"
-              v-model="editedTodo.title"
-              v-autofocus
-              v-if="todo.id == editedTodo.id"
-              @blur="doneEdit(editedTodo)"
-              @keyup.enter="doneEdit(editedTodo)"
-              @keyup.esc="cancelEdit()"
-            />
-          </li>
-          <!-- <li v-for="todo in todos" class="todo"
+        <transition-group name="staggered-fade"
+          tag="ul"
+          :css="false"
+          @before-enter="beforeEnter"
+          @enter="enter"
+          @leave="leave"
+          class="todo-list">
+          <li v-for="todo in computedTodos" class="todo"
             :key="todo.id" :class="{completed: todo.completed}">
             <todo-item
               v-bind:title.sync="todo.title"
               v-bind:completed.sync="todo.completed"
               @delete="removeTodo(todo)"/>
-          </li> -->
-        </ul>
+          </li>
+        </transition-group>
         <footer class="footer" v-show="todos.length">
           <span class="todo-count">
             <strong>{{ remaining }}</strong> {{ remaining | pluralize }} left
@@ -58,10 +43,11 @@
 </template>
 
 <script>
-// import TodoItem from './components/TodoItem.vue'
+import Velocity from 'velocity-animate'
+import TodoItem from './components/TodoItem.vue'
 let id = 1
 export default {
-  // components: { 'todo-item': TodoItem },
+  components: { 'todo-item': TodoItem },
 
   data () {
     return {
@@ -74,6 +60,13 @@ export default {
   computed: {
     remaining () {
       return this.todos.filter(x => !x.completed).length
+    },
+    computedTodos () {
+      return this.todos.filter(item => {
+        return (item.title.toLowerCase().indexOf(this.newTodo.toLowerCase()) !== -1)
+      })
+      // const res = new Map()
+      // return this.todos.filter(x => !res.has(x.title.toLowerCase()) && res.set(x.title.toLowerCase(), 1))
     }
   },
 
@@ -97,21 +90,6 @@ export default {
       this.newTodo = ''
     },
 
-    editTodo (todo) {
-      this.editedTodo = { ...todo }
-    },
-
-    doneEdit (todo) {
-      this.todos = this.todos.map(x => {
-        return todo.id === x.id ? { ...todo } : { ...x }
-      })
-      this.editedTodo = {}
-    },
-
-    cancelEdit () {
-      this.editedTodo = {}
-    },
-
     removeTodo (todo) {
       const index = this.todos.findIndex(x => x.id === todo.id)
       this.todos.splice(index, 1)
@@ -119,6 +97,25 @@ export default {
 
     removeCompleted () {
       this.todos = this.todos.filter(x => !x.completed)
+    },
+    // 动画效果实现
+    beforeEnter (el) {
+      el.style.opacity = 0
+      el.style.height = 0
+    },
+
+    enter (el, done) {
+      const delay = el.dataset.index * 150
+      setTimeout(function () {
+        Velocity(el, { opacity: 1, height: '58px' }, { completed: done })
+      }, delay)
+    },
+
+    leave (el, done) {
+      const delay = el.dataset.index * 150
+      setTimeout(function () {
+        Velocity(el, { opacity: 0, height: 0 }, { completed: done })
+      }, delay)
     }
   },
 

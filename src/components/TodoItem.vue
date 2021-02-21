@@ -56,6 +56,14 @@ export default {
     removeTodo () {
       this.$emit('delete')
     }
+  },
+
+  directives: {
+    autofocus: {
+      inserted: function (el) {
+        el.focus()
+      }
+    }
   }
 }
 </script>
