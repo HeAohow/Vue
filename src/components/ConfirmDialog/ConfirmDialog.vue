@@ -28,12 +28,16 @@
 
 <script>
 // import vm from '../main'
+import dialogStore from './dialogStore'
 
 export default {
   props: {
     dialogInfo: {
       type: Object,
       default: () => {}
+    },
+    index: {
+      type: Number
     }
   },
 
@@ -41,14 +45,18 @@ export default {
     cancel () {
       if (this.dialogInfo.reject) {
         this.dialogInfo.reject()
-        this.$emit('done')
+        // this.$emit('done')
+        // 移除这个弹窗
+        dialogStore.commit('removeDialog', this.index)
       }
     },
 
     confirm () {
       if (this.dialogInfo.resolve) {
         this.dialogInfo.resolve()
-        this.$emit('done')
+        // this.$emit('done')
+        // 移除这个弹窗
+        dialogStore.commit('removeDialog', this.index)
       }
     }
   }

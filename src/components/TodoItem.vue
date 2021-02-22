@@ -59,7 +59,14 @@ export default {
       confirmDialog({
         text: '确认要删除嘛？'
       }).then(res => {
-        this.$emit('delete')
+        // this.$emit('delete')
+        confirmDialog({
+          text: '真的确认要删除嘛？'
+        }).then(res => {
+          this.$emit('delete')
+        }).catch(() => {
+          console.log('用户点击了取消')
+        })
       }).catch(() => {
         console.log('用户点击了取消')
       })
