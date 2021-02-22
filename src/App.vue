@@ -1,133 +1,40 @@
 <template>
   <div>
-    <section class="todoapp">
-      <header class="header">
-        <h1>todos</h1>
-        <input
-          class="new-todo"
-          placeholder="你接下来要做什么?"
-          v-model="newTodo"
-          v-autofocus
-          @keyup.enter="addTodo()">
-      </header>
-      <section class="main" v-show="todos.length">
-        <transition-group name="staggered-fade"
-          tag="ul"
-          :css="false"
-          @before-enter="beforeEnter"
-          @enter="enter"
-          @leave="leave"
-          class="todo-list">
-          <li v-for="todo in computedTodos" class="todo"
-            :key="todo.id" :class="{completed: todo.completed}">
-            <todo-item
-              v-bind:title.sync="todo.title"
-              v-bind:completed.sync="todo.completed"
-              @delete="removeTodo(todo)"/>
-          </li>
-        </transition-group>
-        <footer class="footer" v-show="todos.length">
-          <span class="todo-count">
-            <strong>{{ remaining }}</strong> {{ remaining | pluralize }} left
-          </span>
-          <button
-            class="clear-completed"
-            @click="removeCompleted"
-            v-show="todos.length > remaining">
-            clear completed
-          </button>
-        </footer>
-      </section>
-    </section>
+    <router-view></router-view>
+    <component
+      v-for="(item, index) in items"
+      :key="index"
+      :is="item.component"
+      :dialogInfo="item.dialogInfo"
+      @done="doneDialog(index)"
+    />
   </div>
 </template>
 
 <script>
-import Velocity from 'velocity-animate'
-import TodoItem from './components/TodoItem.vue'
-let id = 1
-export default {
-  components: { 'todo-item': TodoItem },
+import ConfirmDialog from './components/ConfirmDialog'
+import vm from './main'
 
+export default {
+  name: 'app',
   data () {
     return {
-      todos: [],
-      newTodo: '',
-      editedTodo: {}
+      items: []
     }
   },
 
-  computed: {
-    remaining () {
-      return this.todos.filter(x => !x.completed).length
-    },
-    computedTodos () {
-      return this.todos.filter(item => {
-        return (item.title.toLowerCase().indexOf(this.newTodo.toLowerCase()) !== -1)
+  mounted () {
+    this.$nextTick(() => {
+      vm.$on('setDialog', dialogInfo => {
+        this.items.push({ dialogInfo, component: ConfirmDialog })
       })
-      // const res = new Map()
-      // return this.todos.filter(x => !res.has(x.title.toLowerCase()) && res.set(x.title.toLowerCase(), 1))
-    }
-  },
-
-  filters: {
-    pluralize (num) {
-      return num > 1 ? 'items' : 'item'
-    }
+    })
   },
 
   methods: {
-    addTodo () {
-      if (!this.newTodo) {
-        return
-      }
-      this.todos.unshift({
-        id: id++,
-        title: this.newTodo,
-        completed: false
-      })
-      // 添加成功后清空输入框
-      this.newTodo = ''
-    },
-
-    removeTodo (todo) {
-      const index = this.todos.findIndex(x => x.id === todo.id)
-      this.todos.splice(index, 1)
-    },
-
-    removeCompleted () {
-      this.todos = this.todos.filter(x => !x.completed)
-    },
-    // 动画效果实现
-    beforeEnter (el) {
-      el.style.opacity = 0
-      el.style.height = 0
-    },
-
-    enter (el, done) {
-      const delay = el.dataset.index * 150
-      setTimeout(function () {
-        Velocity(el, { opacity: 1, height: '58px' }, { completed: done })
-      }, delay)
-    },
-
-    leave (el, done) {
-      const delay = el.dataset.index * 150
-      setTimeout(function () {
-        Velocity(el, { opacity: 0, height: 0 }, { completed: done })
-      }, delay)
-    }
-  },
-
-  directives: {
-    autofocus: {
-      inserted: function (el) {
-        el.focus()
-      }
+    doneDialog (index) {
+      this.items.splice(index, 1)
     }
   }
 }
 </script>
-<style>
-@import "https://unpkg.com/todomvc-app-css@2.1.0/index.css";
-</style>

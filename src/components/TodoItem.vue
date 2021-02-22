@@ -17,6 +17,8 @@
 </template>
 
 <script>
+import confirmDialog from '../utils/confirm'
+
 export default {
   data () {
     return {
@@ -54,7 +56,13 @@ export default {
       this.$emit('update:completed', completed)
     },
     removeTodo () {
-      this.$emit('delete')
+      confirmDialog({
+        text: '确认要删除嘛？'
+      }).then(res => {
+        this.$emit('delete')
+      }).catch(() => {
+        console.log('用户点击了取消')
+      })
     }
   },
 
